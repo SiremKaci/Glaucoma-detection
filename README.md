@@ -31,8 +31,3 @@ Ce projet montre des techniques de vision par ordinateur en santé, avec focus s
    ```bash
    git clone https://github.com/SiremKaci/glaucoma-detection.git
    cd glaucoma-detection
-Installe les dépendances :
-pip install -r requirements.txt
-Prépare le dataset fusionné (voir Fuuusion.ipynb pour fusion).
-Lance l'entraînement :
-jupyter notebook Taches.ipynb
