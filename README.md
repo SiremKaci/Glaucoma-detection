@@ -77,7 +77,7 @@ These results represent experimental performance on the dataset used in this pro
 The following figure shows the evolution of the main training and validation metrics throughout optimization.
 
 <p align="center">
-  <img src="images/1.png" width="850" alt="Training and validation history">
+  <img src="Images/1.png" width="850" alt="Training and validation history">
 </p>
 
 The training history provides a visual representation of model convergence and validation behavior during the transfer-learning and progressive fine-tuning stages.
@@ -86,13 +86,13 @@ The training history provides a visual representation of model convergence and v
 
 ### Prediction Distribution
 
-The following visualization shows the distribution of model outputs during evaluation.
+The following figure shows the distribution of model outputs during evaluation.
 
 <p align="center">
-  <img src="images/Barres.png" width="650" alt="Prediction distribution">
+  <img src="Images/Barres.png" width="650" alt="Prediction distribution">
 </p>
 
-This distribution provides additional insight into the separation produced by the trained classifier between the two classes.
+This visualization provides additional insight into the separation produced by the trained classifier between the two classes.
 
 ---
 
@@ -101,7 +101,7 @@ This distribution provides additional insight into the separation produced by th
 The confusion matrix below summarizes the final classification results on the independent test set using the selected decision threshold of **0.25**.
 
 <p align="center">
-  <img src="images/Matrix.png" width="550" alt="Test confusion matrix">
+  <img src="Images/Matrix.png" width="550" alt="Test confusion matrix">
 </p>
 
 The confusion matrix complements the global evaluation metrics by showing the distribution of correct predictions and classification errors for both classes.
@@ -257,7 +257,7 @@ All retinal fundus images are resized to:
 224 × 224
 ```
 
-**CLAHE (Contrast Limited Adaptive Histogram Equalization)** is applied to improve local image contrast.
+**CLAHE (Contrast Limited Adaptive Histogram Equalization)** is applied to improve local image contrast before classification.
 
 The images are subsequently normalized using the standard ImageNet normalization parameters expected by the pretrained ConvNeXt network.
 
@@ -539,17 +539,18 @@ Sensitivity is particularly relevant to this experimental task because a false n
 ```text
 Glaucoma-detection/
 │
-├── notebook/
-│   └── glaucoma_detection.ipynb
-│
-├── images/
+├── Images/
 │   ├── 1.png
 │   ├── Barres.png
 │   └── Matrix.png
 │
+├── Notebook/
+│   └── glaucoma_detection.ipynb
+│
+├── .gitignore
+├── LICENSE
 ├── README.md
-├── requirements.txt
-└── .gitignore
+└── requirements.txt
 ```
 
 Datasets, trained model checkpoints, local environments, and temporary files are intentionally excluded from version control.
@@ -616,10 +617,10 @@ jupyter
 
 After downloading the source datasets, organize the images according to the expected dataset structure or modify `DATA_ROOT` inside the notebook.
 
-Then open:
+Then open the notebook located in:
 
 ```text
-notebook/glaucoma_detection.ipynb
+Notebook/
 ```
 
 using **Jupyter Notebook** or **Google Colab**.
@@ -779,9 +780,7 @@ It must not replace examination, interpretation, diagnosis, or clinical judgment
 
 ## License
 
-No software license has currently been specified for this project.
-
-An appropriate open-source license should be selected before granting permission for reuse, modification, or redistribution of the source code.
+See the [`LICENSE`](LICENSE) file included in this repository for the applicable software license.
 
 ---
 
