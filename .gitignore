@@ -1,5 +1,5 @@
 # ==============================
-# Dataset / Medical Images
+# Datasets
 # ==============================
 data/
 dataset/
@@ -7,14 +7,6 @@ datasets/
 Fusion/
 ACRIMA/
 RIM-ONE_DL_images/
-
-# Common image files if accidentally added
-*.jpg
-*.jpeg
-*.png
-*.tif
-*.tiff
-*.bmp
 
 # ==============================
 # Trained Models / Checkpoints
@@ -30,8 +22,6 @@ models/
 # ==============================
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
 
 # ==============================
 # Virtual Environments
@@ -46,19 +36,15 @@ env/
 .ipynb_checkpoints/
 
 # ==============================
-# IDE
+# IDE / OS
 # ==============================
 .vscode/
 .idea/
-
-# ==============================
-# OS Files
-# ==============================
 .DS_Store
 Thumbs.db
 
 # ==============================
-# Temporary / Cache Files
+# Cache / Temporary
 # ==============================
 .cache/
 *.tmp

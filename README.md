@@ -16,11 +16,25 @@
 
 ## Overview
 
-Glaucoma is a progressive optic neuropathy that can lead to irreversible vision loss. This project investigates the use of deep learning for **automated glaucoma classification from retinal fundus images**.
+Glaucoma is a progressive optic neuropathy that can lead to irreversible vision loss. This project investigates the use of **deep learning for automated glaucoma classification from retinal fundus images**.
 
-The proposed pipeline is based on an **ImageNet-pretrained ConvNeXt-Tiny** architecture and combines retinal image enhancement, data augmentation, class-imbalance handling, progressive transfer learning, mixed-precision training, early stopping, and validation-based decision threshold optimization.
+The proposed pipeline is based on an **ImageNet-pretrained ConvNeXt-Tiny** architecture and combines:
 
-The final model achieved a **97.15% ROC AUC**, **95.88% sensitivity**, **91.19% F1-score**, and **91.16% accuracy** on the independent test set.
+- CLAHE-based retinal image enhancement
+- Data augmentation with Albumentations
+- Transfer learning from ImageNet
+- Progressive backbone fine-tuning
+- Weighted random sampling
+- Class-weighted loss
+- Label smoothing
+- Automatic mixed-precision training
+- Learning-rate scheduling
+- Early stopping
+- Validation-based checkpoint selection
+- Validation-based decision threshold optimization
+- Independent test-set evaluation
+
+The final model achieved a **97.15% ROC AUC**, **95.88% sensitivity**, **91.19% F1-score**, and **91.16% accuracy** on the held-out test set.
 
 > **Research disclaimer:** This project was developed for academic and research purposes. The model has not undergone external clinical validation and must not be used as a medical diagnostic system or as a substitute for professional medical assessment.
 
@@ -53,6 +67,44 @@ The model achieved a sensitivity of **95.88%**, indicating that it identified mo
 The **97.15% ROC AUC** indicates strong discrimination between the two classes across classification thresholds.
 
 These results represent experimental performance on the dataset used in this project and should not be interpreted as evidence of real-world clinical diagnostic performance.
+
+---
+
+## Experimental Results
+
+### Training History
+
+The following figure shows the evolution of the main training and validation metrics throughout optimization.
+
+<p align="center">
+  <img src="images/1.png" width="850" alt="Training and validation history">
+</p>
+
+The training history provides a visual representation of model convergence and validation behavior during the transfer-learning and progressive fine-tuning stages.
+
+---
+
+### Prediction Distribution
+
+The following visualization shows the distribution of model outputs during evaluation.
+
+<p align="center">
+  <img src="images/Barres.png" width="650" alt="Prediction distribution">
+</p>
+
+This distribution provides additional insight into the separation produced by the trained classifier between the two classes.
+
+---
+
+### Confusion Matrix
+
+The confusion matrix below summarizes the final classification results on the independent test set using the selected decision threshold of **0.25**.
+
+<p align="center">
+  <img src="images/Matrix.png" width="550" alt="Test confusion matrix">
+</p>
+
+The confusion matrix complements the global evaluation metrics by showing the distribution of correct predictions and classification errors for both classes.
 
 ---
 
@@ -104,7 +156,7 @@ Data Augmentation           Deterministic
 
 ## Dataset
 
-The final experiment contains **10,040 retinal fundus images** divided into predefined training, validation, and test sets.
+The final experimental dataset contains **10,040 retinal fundus images** divided into predefined training, validation, and test sets.
 
 | Split | Images | Class 0 | Class 1 |
 |---|---:|---:|---:|
@@ -113,7 +165,29 @@ The final experiment contains **10,040 retinal fundus images** divided into pred
 | Test | 916 | 479 | 437 |
 | **Total** | **10,040** | **5,083** | **4,957** |
 
-The dataset follows the `torchvision.datasets.ImageFolder` directory structure:
+The dataset used for this project was constructed from retinal fundus image datasets available through Kaggle.
+
+### Data Sources
+
+#### EyePACS-AIROGS Light V2 — Glaucoma Dataset
+
+Retinal fundus images intended for glaucoma-related computer vision experiments.
+
+- **Dataset:** Glaucoma Dataset — EyePACS-AIROGS Light V2
+- **Platform:** Kaggle
+- **Source:** https://www.kaggle.com/datasets/deathtrooper/glaucoma-dataset-eyepacs-airogs-light-v2
+
+#### RIM-ONE — Retinal Dataset for Assessing Glaucoma
+
+RIM-ONE provides retinal fundus images for research related to glaucoma assessment.
+
+- **Dataset:** RIM-ONE Retinal Dataset for Assessing Glaucoma
+- **Platform:** Kaggle
+- **Source:** https://www.kaggle.com/datasets/orvile/rim-one-retinal-dataset-for-assessing-glaucoma
+
+### Dataset Organization
+
+The images used in the experiment were organized locally according to the `torchvision.datasets.ImageFolder` structure:
 
 ```text
 Fusion/
@@ -131,9 +205,13 @@ Fusion/
     └── 1/
 ```
 
-The dataset is **not included in this repository**.
+The resulting experimental split contains:
 
-The exact original datasets, licenses, and required academic citations used to construct the local `Fusion` dataset should be documented according to the corresponding data sources before redistributing any medical images.
+- **8,354** training images
+- **770** validation images
+- **916** test images
+
+> **Dataset availability:** The retinal images are not redistributed through this repository. Users interested in reproducing the project should obtain the original datasets directly from their respective sources and comply with their licenses, citation requirements, and terms of use.
 
 ---
 
@@ -141,7 +219,7 @@ The exact original datasets, licenses, and required academic citations used to c
 
 ### ConvNeXt-Tiny
 
-The final model is based on **ConvNeXt-Tiny** initialized with ImageNet-pretrained weights provided by `torchvision`.
+The final classifier is based on **ConvNeXt-Tiny**, initialized with ImageNet-pretrained weights provided by `torchvision`.
 
 The original classification layer is replaced with a custom classification head:
 
@@ -167,7 +245,7 @@ ImageNet-pretrained backbone
 
 The notebook also includes an implementation of **EfficientNetV2-S** as an alternative architecture.
 
-All results reported in this README correspond to **ConvNeXt-Tiny**.
+All experimental results reported in this README correspond to **ConvNeXt-Tiny**.
 
 ---
 
@@ -179,9 +257,29 @@ All retinal fundus images are resized to:
 224 × 224
 ```
 
-**CLAHE (Contrast Limited Adaptive Histogram Equalization)** is applied to improve local image contrast before classification.
+**CLAHE (Contrast Limited Adaptive Histogram Equalization)** is applied to improve local image contrast.
 
-The images are then normalized using the standard ImageNet mean and standard deviation expected by the pretrained ConvNeXt network.
+The images are subsequently normalized using the standard ImageNet normalization parameters expected by the pretrained ConvNeXt network.
+
+### Validation and Test Preprocessing
+
+```text
+Retinal Image
+      │
+      ▼
+Resize 224 × 224
+      │
+      ▼
+CLAHE
+      │
+      ▼
+ImageNet Normalization
+      │
+      ▼
+Tensor
+```
+
+Validation and test transformations are deterministic.
 
 ---
 
@@ -189,7 +287,7 @@ The images are then normalized using the standard ImageNet mean and standard dev
 
 Training augmentation is implemented using **Albumentations**.
 
-The training pipeline includes:
+The augmentation pipeline includes:
 
 - CLAHE
 - Horizontal flipping
@@ -202,50 +300,63 @@ The training pipeline includes:
 - ImageNet normalization
 - Tensor conversion
 
-The validation and test pipelines remain deterministic:
+Conceptually, the training pipeline follows:
 
 ```text
+Retinal Image
+      │
+      ▼
 Resize
-   │
-   ▼
+      │
+      ▼
 CLAHE
-   │
-   ▼
+      │
+      ▼
+Geometric Augmentation
+      │
+      ▼
+Color Augmentation
+      │
+      ▼
+Noise / Coarse Dropout
+      │
+      ▼
 ImageNet Normalization
-   │
-   ▼
+      │
+      ▼
 Tensor
 ```
 
-Random training augmentation is therefore never applied during validation or final test evaluation.
+Random training augmentation is never applied during validation or final test evaluation.
 
 ---
 
 ## Transfer Learning
 
-The model uses **transfer learning** rather than training the ConvNeXt network from random initialization.
+The model uses **transfer learning** rather than training ConvNeXt from random initialization.
 
-Training starts from weights learned on ImageNet.
+Training starts from visual representations learned from ImageNet.
 
-During the initial stage, most of the pretrained backbone is frozen while the final feature block and custom classification head remain trainable.
+During the initial training stage, most of the pretrained backbone remains frozen while the final feature block and custom classification head are optimized for the retinal image classification task.
 
-This allows the model to adapt higher-level representations to retinal fundus images while preserving useful pretrained visual features.
+This allows higher-level representations to adapt to retinal fundus images while preserving useful pretrained visual features.
 
 ---
 
 ## Progressive Fine-Tuning
 
-The training process uses a two-stage fine-tuning strategy.
+The training procedure follows a two-stage fine-tuning strategy.
 
 ### Stage 1 — Partial Fine-Tuning
 
-During the initial training stage:
+During the initial stage:
 
 ```text
-ConvNeXt backbone
-├── Earlier feature blocks → Frozen
-├── Final feature block    → Trainable
-└── Classification head    → Trainable
+ConvNeXt Backbone
+│
+├── Earlier Feature Blocks → Frozen
+├── Final Feature Block    → Trainable
+└── Classification Head    → Trainable
 ```
 
 The initial learning rate is:
@@ -256,19 +367,19 @@ The initial learning rate is:
 
 ### Stage 2 — Full Fine-Tuning
 
-At **epoch 30**, the entire ConvNeXt backbone is unfrozen.
+At **epoch 30**, the complete ConvNeXt backbone is unfrozen.
 
 ```text
 Epoch 30
    │
    ▼
-Unfreeze complete backbone
+Unfreeze Complete Backbone
    │
    ▼
-Reduce learning rate
+Reduce Learning Rate
    │
    ▼
-End-to-end fine-tuning
+End-to-End Fine-Tuning
 ```
 
 The fine-tuning learning rate is:
@@ -277,7 +388,7 @@ The fine-tuning learning rate is:
 1e-5
 ```
 
-This progressive strategy allows the newly initialized classification layers to adapt before applying smaller updates across the complete pretrained network.
+This progressive strategy allows the newly initialized classification layers and high-level representations to adapt before applying smaller gradient updates across the complete pretrained network.
 
 ---
 
@@ -292,8 +403,11 @@ This progressive strategy allows the newly initialized classification layers to 
 | Maximum Epochs | 300 |
 | Initial Learning Rate | `5e-5` |
 | Fine-Tuning Learning Rate | `1e-5` |
+| Optimizer | AdamW |
 | Weight Decay | `1e-5` |
+| Loss | Weighted Cross-Entropy |
 | Label Smoothing | `0.1` |
+| LR Scheduler | ReduceLROnPlateau |
 | Early Stopping Patience | 10 |
 | Full Backbone Unfreezing | Epoch 30 |
 | Model Selection Metric | Validation F1 |
@@ -306,7 +420,7 @@ This progressive strategy allows the newly initialized classification layers to 
 
 The model is optimized using **AdamW**.
 
-A `ReduceLROnPlateau` learning-rate scheduler monitors validation performance and reduces the learning rate when improvement stagnates.
+A `ReduceLROnPlateau` scheduler monitors validation performance and adapts the learning rate when improvement stagnates.
 
 The training objective is based on:
 
@@ -316,8 +430,8 @@ CrossEntropyLoss
 
 with:
 
-- class weighting;
-- label smoothing (`0.1`).
+- class weighting
+- label smoothing (`0.1`)
 
 Automatic Mixed Precision (**AMP**) is enabled when CUDA is available to improve GPU training efficiency and reduce memory consumption.
 
@@ -325,15 +439,17 @@ Automatic Mixed Precision (**AMP**) is enabled when CUDA is available to improve
 
 ## Class Imbalance Handling
 
-Although the final dataset is relatively balanced, the training pipeline includes mechanisms for handling differences in class frequency.
+Although the final dataset is relatively balanced, the training pipeline explicitly accounts for differences in class frequency.
 
 ### Weighted Random Sampling
 
-A `WeightedRandomSampler` adjusts the sampling probability of training examples according to their class frequency.
+A `WeightedRandomSampler` adjusts the probability of selecting training examples according to their class frequency.
+
+This mechanism operates exclusively on the training set.
 
 ### Weighted Loss
 
-Class weights are independently calculated from the **training set** and incorporated into the cross-entropy loss.
+Class weights are independently calculated from the training labels and incorporated into `CrossEntropyLoss`.
 
 Validation and test class distributions are not used when computing training weights.
 
@@ -343,47 +459,49 @@ Validation and test class distributions are not used when computing training wei
 
 Model selection is performed exclusively using the **validation F1-score**.
 
-Whenever validation performance improves, the corresponding model weights are saved as the best checkpoint.
+Whenever validation F1 improves, the corresponding model weights are saved as the current best checkpoint.
 
 Early stopping terminates training when validation performance does not improve for the configured patience period.
 
-The final best checkpoint was obtained at:
+The best checkpoint from the final experiment was obtained at:
 
 ```text
-Epoch: 52
-Validation F1: 93.90%
+Best Epoch         : 52
+Best Validation F1 : 93.90%
 ```
+
+This checkpoint is subsequently reloaded before threshold optimization and final evaluation.
 
 ---
 
 ## Decision Threshold Optimization
 
-Binary classifiers commonly use a probability threshold of `0.50`.
+Binary classifiers commonly use a default probability threshold of `0.50`.
 
-In this project, the operating threshold is instead selected using predictions from the **validation set**.
+In this project, the operating threshold is instead selected using predictions obtained from the **validation set**.
 
 Candidate thresholds are evaluated according to validation performance:
 
 ```text
-Validation predictions
-        │
-        ▼
-Candidate thresholds
-        │
-        ▼
-F1-score evaluation
-        │
-        ▼
-Best validation threshold
-        │
-        ▼
-       0.25
-        │
-        ▼
-Threshold fixed
-        │
-        ▼
-Independent test evaluation
+Validation Predictions
+          │
+          ▼
+ Candidate Thresholds
+          │
+          ▼
+ Validation F1 Score
+          │
+          ▼
+ Best Threshold
+          │
+          ▼
+        0.25
+          │
+          ▼
+    Freeze Threshold
+          │
+          ▼
+ Independent Test Set
 ```
 
 The final selected threshold was:
@@ -392,23 +510,25 @@ The final selected threshold was:
 0.25
 ```
 
-The test set was **not used to select this threshold**.
+The **test set was not used to select this threshold**.
 
-This separation is important because optimizing the threshold directly on test results would introduce test-set leakage.
+Only after threshold selection was complete was the final model evaluated on the independent test set.
+
+This separation prevents direct test-set leakage during operating-point selection.
 
 ---
 
 ## Evaluation Metrics
 
-The model is evaluated using several complementary classification metrics:
+The final classifier is evaluated using several complementary metrics:
 
-- Accuracy
-- Precision
-- Recall / Sensitivity
-- F1-score
-- ROC AUC
-- Cross-entropy loss
-- Confusion matrix
+- **Accuracy** — overall proportion of correct predictions
+- **Precision** — proportion of predicted positive samples that are positive
+- **Recall / Sensitivity** — proportion of positive samples correctly detected
+- **F1-score** — harmonic mean of precision and recall
+- **ROC AUC** — discrimination performance across classification thresholds
+- **Cross-entropy loss**
+- **Confusion matrix**
 
 Sensitivity is particularly relevant to this experimental task because a false negative corresponds to a glaucoma-positive image that the classifier fails to identify.
 
@@ -416,54 +536,54 @@ Sensitivity is particularly relevant to this experimental task because a false n
 
 ## Repository Structure
 
-The recommended repository structure is:
-
 ```text
-glaucoma-detection/
+Glaucoma-detection/
 │
 ├── notebook/
 │   └── glaucoma_detection.ipynb
 │
-├── results/
-│   └── figures/
+├── images/
+│   ├── 1.png
+│   ├── Barres.png
+│   └── Matrix.png
 │
 ├── README.md
 ├── requirements.txt
 └── .gitignore
 ```
 
-The dataset, trained model checkpoints, Python environments, and temporary files are intentionally excluded from version control.
+Datasets, trained model checkpoints, local environments, and temporary files are intentionally excluded from version control.
 
 ---
 
 ## Installation
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone <YOUR_REPOSITORY_URL>
-cd <YOUR_REPOSITORY_NAME>
+cd Glaucoma-detection
 ```
 
-### 2. Create a virtual environment
+### 2. Create a Virtual Environment
 
 ```bash
 python -m venv .venv
 ```
 
-On Windows:
+#### Windows
 
 ```powershell
 .venv\Scripts\activate
 ```
 
-On Linux or macOS:
+#### Linux / macOS
 
 ```bash
 source .venv/bin/activate
 ```
 
-### 3. Install the dependencies
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -494,7 +614,7 @@ jupyter
 
 ## Running the Project
 
-Place the dataset using the expected structure or modify `DATA_ROOT` inside the notebook.
+After downloading the source datasets, organize the images according to the expected dataset structure or modify `DATA_ROOT` inside the notebook.
 
 Then open:
 
@@ -502,7 +622,9 @@ Then open:
 notebook/glaucoma_detection.ipynb
 ```
 
-using Jupyter Notebook or Google Colab and execute the cells sequentially.
+using **Jupyter Notebook** or **Google Colab**.
+
+Execute the notebook cells sequentially to reproduce preprocessing, training, validation, threshold optimization, and evaluation.
 
 ---
 
@@ -510,7 +632,7 @@ using Jupyter Notebook or Google Colab and execute the cells sequentially.
 
 The final experiment was trained using **Google Colab** with the dataset stored in Google Drive.
 
-Google Drive can be mounted with:
+Google Drive can be mounted using:
 
 ```python
 from google.colab import drive
@@ -518,7 +640,7 @@ from google.colab import drive
 drive.mount("/content/drive")
 ```
 
-The dataset path used during the experiment was:
+The dataset path used during the reported experiment was:
 
 ```text
 /content/drive/MyDrive/Fusion
@@ -549,17 +671,17 @@ Random seeds are configured for:
 - PyTorch
 - CUDA, when available
 
-The training, validation, and test datasets remain independent.
+The training, validation, and test datasets remain separated throughout the experiment.
 
 Random augmentation is restricted to the training pipeline, while validation and test preprocessing remain deterministic.
 
 Exact numerical reproduction may nevertheless vary depending on:
 
-- PyTorch version;
-- CUDA version;
-- cuDNN version;
-- GPU architecture;
-- underlying GPU operations.
+- PyTorch version
+- CUDA version
+- cuDNN version
+- GPU architecture
+- underlying GPU operations
 
 ---
 
@@ -569,7 +691,7 @@ Exact numerical reproduction may nevertheless vary depending on:
 |---|---|
 | Language | Python |
 | Deep Learning | PyTorch, Torchvision |
-| Architecture | ConvNeXt-Tiny |
+| Main Architecture | ConvNeXt-Tiny |
 | Alternative Architecture | EfficientNetV2-S |
 | Image Augmentation | Albumentations |
 | Image Processing | OpenCV, CLAHE |
@@ -589,9 +711,10 @@ Several limitations should be considered:
 
 - No external clinical dataset was used for final validation.
 - No prospective clinical evaluation was performed.
-- Performance may vary across different retinal cameras and acquisition protocols.
-- Image quality differences may affect predictions.
+- Performance may vary across retinal cameras and acquisition protocols.
+- Image-quality differences may affect model predictions.
 - Performance may vary across institutions and patient populations.
+- Dataset composition may influence measured performance.
 - The probability threshold of `0.25` is an experimentally optimized operating point, not a clinically established diagnostic threshold.
 - High performance on the current test set does not guarantee equivalent performance in real-world clinical environments.
 
@@ -603,22 +726,44 @@ The model should therefore be considered a **research prototype rather than a cl
 
 Potential extensions of this project include:
 
-- external validation on independent retinal datasets;
-- patient-level evaluation where applicable;
-- Grad-CAM and other explainability methods;
-- model calibration analysis;
-- sensitivity-specificity operating point analysis;
-- comparison with additional modern vision architectures;
-- cross-dataset generalization experiments;
-- lightweight architectures for deployment;
-- prospective clinical validation.
+- External validation on independent retinal datasets
+- Patient-level evaluation where applicable
+- Grad-CAM and other explainability techniques
+- Model calibration analysis
+- Sensitivity-specificity operating-point analysis
+- Comparison with additional modern vision architectures
+- Cross-dataset generalization experiments
+- Ablation studies on CLAHE and augmentation strategies
+- Lightweight architectures for deployment
+- Prospective clinical validation
+
+---
+
+## Data Sources & Acknowledgments
+
+This project uses retinal fundus images obtained from publicly available datasets hosted on Kaggle.
+
+### EyePACS-AIROGS Light V2
+
+**Glaucoma Dataset — EyePACS-AIROGS Light V2**
+
+https://www.kaggle.com/datasets/deathtrooper/glaucoma-dataset-eyepacs-airogs-light-v2
+
+### RIM-ONE
+
+**RIM-ONE Retinal Dataset for Assessing Glaucoma**
+
+https://www.kaggle.com/datasets/orvile/rim-one-retinal-dataset-for-assessing-glaucoma
+
+We acknowledge the original dataset creators and contributors for making these retinal imaging resources available to the research community.
+
+The datasets themselves are **not included in this repository**. Their respective licenses, citation requirements, and terms of use remain applicable.
 
 ---
 
 ## Authors
 
 - **Sirem Kaci**
-
 
 ---
 
@@ -644,4 +789,6 @@ An appropriate open-source license should be selected before granting permission
 
 This project was developed using open-source tools and libraries from the Python machine-learning and computer-vision ecosystem, including **PyTorch, Torchvision, Albumentations, OpenCV, NumPy, scikit-learn, Matplotlib, and Seaborn**.
 
-The project was trained using **Google Colab** and GPU acceleration through **CUDA**.
+Training was performed using **Google Colab** with GPU acceleration through **CUDA**.
+
+Special acknowledgment is given to the creators and maintainers of the retinal fundus datasets used in this project for making these resources available to the research community.
